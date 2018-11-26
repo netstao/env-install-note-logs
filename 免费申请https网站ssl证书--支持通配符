@@ -1,0 +1,37 @@
+准备工作 
+安装Certbot 
+以 centos7 为例
+
+Certbot 的官方网站是 https://certbot.eff.org/ ，打开这个链接选择自己使用的 web server 和操作系统，EFF 官方会给出详细的使用方法。
+
+```shell
+wget https://dl.eff.org/certbot-auto
+chmod a+x certbot-auto
+./certbot-auto certonly  -d *.example.com --manual --preferred-challenges dns --server https://acme-v02.api.letsencrypt.org/directory
+
+### 可以将多个泛域名，放到一个证书里（亲测可行）,将example.com 换成你自己的域名。
+./certbot-auto certonly  -d *.example.com  -d *.a.com  --manual --preferred-challenges dns --server https://acme-v02.api.letsencrypt.org/directory
+
+
+```
+
+配置DNS 
+要求配置 DNS TXT 记录，从而校验域名所有权，也就是判断证书申请者是否有域名的所有权。 
+给 _acme-challenge.example.com 配置一条 TXT 记录.
+
+### 测试txt记录是否生效
+```shell
+dig  -t txt  _acme-challenge.example.com @8.8.8.8  
+```
+
+### 验证 
+```shell
+   openssl x509 -in  /etc/letsencrypt/archive/example.com/cert1.pem -noout -text 
+```
+
+### 定时更新
+```shell
+  crontab -e
+
+0 0 * * * /root/tar/certbot-auto renew --renew-hook "systemctl reload nginx"
+```
